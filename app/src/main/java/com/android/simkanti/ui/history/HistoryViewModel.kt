@@ -19,6 +19,9 @@ data class HistoryTransaction(
     val id: Int,
     val nim: String,
     val totalHarga: String,
+    val idBarang: String,
+    val namaBarang: String,
+    val kategori: String,
     val date: String,
     val time: String? = null
 )
@@ -85,6 +88,9 @@ class HistoryViewModel : ViewModel() {
                             id = item.getInt("id_h"),
                             nim = item.getString("nim"),
                             totalHarga = item.getString("totalharga"),
+                            idBarang = item.optString("id_barang", "-"),
+                            namaBarang = item.optString("nama_barang", "Produk tidak diketahui"),
+                            kategori = item.optString("nama_kategori", "Umum"),
                             date = item.getString("date"),
                             time = item.optString("time", null)
                         )

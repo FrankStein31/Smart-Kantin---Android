@@ -16,6 +16,8 @@ class HistoryAdapter(private var transactions: List<HistoryTransaction>) :
         val dateTextView: TextView = view.findViewById(R.id.text_history_date)
         val amountTextView: TextView = view.findViewById(R.id.text_history_amount)
         val timeTextView: TextView = view.findViewById(R.id.text_history_time)
+        val productNameTextView: TextView = view.findViewById(R.id.text_product_name)
+        val productIdTextView: TextView = view.findViewById(R.id.text_product_id)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryViewHolder {
@@ -36,6 +38,10 @@ class HistoryAdapter(private var transactions: List<HistoryTransaction>) :
         holder.dateTextView.text = transaction.date
         holder.amountTextView.text = formattedAmount
         holder.timeTextView.text = transaction.time ?: "-"
+        
+        // Set product info
+        holder.productNameTextView.text = "${transaction.kategori} - ${transaction.namaBarang}"
+        holder.productIdTextView.visibility = View.GONE
     }
 
     override fun getItemCount() = transactions.size
