@@ -44,7 +44,7 @@ data class OperationResult(
 )
 
 class ProductViewModel : ViewModel() {
-    private val baseUrl = "http://192.168.1.155/smart_kantin/api_android"
+    private val baseUrl = "http://192.168.0.56/smart_kantin/api_android"
 
     fun getAllProducts(): LiveData<ProductResult> {
         val resultLiveData = MutableLiveData<ProductResult>()
