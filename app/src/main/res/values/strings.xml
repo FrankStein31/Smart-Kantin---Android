@@ -4,5 +4,5 @@
     <string name="title_product">Produk</string>
     <string name="title_history">Histori</string>
     <string name="title_profile">Profil</string>
-    <string name="ip_api">http://192.168.0.56/smart_kantin/api_android/</string>
+    <string name="ip_api">http://192.168.1.155/smart_kantin/api_android/</string>
 </resources>

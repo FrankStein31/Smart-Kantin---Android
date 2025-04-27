@@ -4,12 +4,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.android.simkanti.R
 import android.util.Log
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 
 class ProductAdapter(
     private val onProductChecked: (String, Boolean) -> Unit
@@ -39,6 +42,7 @@ class ProductAdapter(
         private val tvProductPrice: TextView = itemView.findViewById(R.id.tv_product_price)
         private val tvProductCategory: TextView = itemView.findViewById(R.id.tv_product_category)
         private val cbAllowed: CheckBox = itemView.findViewById(R.id.cb_product_allowed)
+        private val ivProductImage: ImageView = itemView.findViewById(R.id.iv_product_image)
 
         fun bind(product: Product, isChecked: Boolean) {
             tvProductName.text = product.namaBarang
@@ -65,6 +69,24 @@ class ProductAdapter(
             // Set kategori ke TextView dan pastikan visibility VISIBLE
             tvProductCategory.text = kategoriText
             tvProductCategory.visibility = View.VISIBLE
+            
+            // Tampilkan foto produk menggunakan Glide
+            if (!product.fotoUrl.isNullOrEmpty()) {
+                Log.d("ProductAdapter", "Loading image from URL: ${product.fotoUrl}")
+                Glide.with(itemView.context)
+                    .load(product.fotoUrl)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .centerCrop()
+                    .placeholder(R.drawable.ic_launcher_background) // Placeholder default
+                    .error(R.drawable.ic_launcher_background) // Gambar jika error
+                    .into(ivProductImage)
+            } else {
+                // Tampilkan placeholder jika tidak ada foto
+                Glide.with(itemView.context)
+                    .load(R.drawable.ic_launcher_background)
+                    .into(ivProductImage)
+                Log.d("ProductAdapter", "No image URL for product: ${product.namaBarang}")
+            }
             
             // Log informasi kategori untuk debugging
             Log.d("ProductAdapter", "Product: ${product.namaBarang}, Kategori: $kategoriText, " +

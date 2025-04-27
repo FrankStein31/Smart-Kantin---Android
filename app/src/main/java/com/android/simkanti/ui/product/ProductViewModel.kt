@@ -25,6 +25,8 @@ data class Product(
     val hargaJual: String,
     val satuanBarang: String,
     val stok: String,
+    val foto: String?,
+    val fotoUrl: String?,
     val expired: String,
     val tglInput: String,
     val tglUpdate: String?,
@@ -44,7 +46,7 @@ data class OperationResult(
 )
 
 class ProductViewModel : ViewModel() {
-    private val baseUrl = "http://192.168.0.56/smart_kantin/api_android"
+    private val baseUrl = "http://192.168.1.155/smart_kantin/api_android"
 
     fun getAllProducts(): LiveData<ProductResult> {
         val resultLiveData = MutableLiveData<ProductResult>()
@@ -123,6 +125,8 @@ class ProductViewModel : ViewModel() {
                                     hargaJual = item.optString("harga_jual", ""),
                                     satuanBarang = item.optString("satuan_barang", ""),
                                     stok = item.optString("stok", ""),
+                                    foto = item.optString("foto", null),
+                                    fotoUrl = item.optString("foto_url", null),
                                     expired = item.optString("expired", ""),
                                     tglInput = item.optString("tgl_input", ""),
                                     tglUpdate = item.optString("tgl_update", ""),
