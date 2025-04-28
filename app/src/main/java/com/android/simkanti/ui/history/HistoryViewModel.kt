@@ -14,6 +14,10 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 // Data class to represent a single history transaction
 data class HistoryTransaction(
@@ -32,6 +36,20 @@ data class DailyLimit(
     val limitAmount: Double,
     val spentToday: Double,
     val remaining: Double
+)
+
+// Data class untuk total pengeluaran harian
+data class DailyTotal(
+    val date: String,
+    val total: Double,
+    val formattedDate: String
+)
+
+// Data class untuk total pengeluaran bulanan
+data class MonthlyTotal(
+    val yearMonth: String,
+    val total: Double,
+    val formattedMonth: String
 )
 
 // Response data class
@@ -54,12 +72,28 @@ class HistoryViewModel : ViewModel() {
     
     private val _limitUpdateResult = MutableLiveData<ApiResponse>()
     val limitUpdateResult: LiveData<ApiResponse> = _limitUpdateResult
+    
+    private val _dailyTotals = MutableLiveData<List<DailyTotal>>()
+    val dailyTotals: LiveData<List<DailyTotal>> = _dailyTotals
+    
+    private val _monthlyTotals = MutableLiveData<List<MonthlyTotal>>()
+    val monthlyTotals: LiveData<List<MonthlyTotal>> = _monthlyTotals
+    
+    private val _filterTotal = MutableLiveData<Double>()
+    val filterTotal: LiveData<Double> = _filterTotal
+    
+    // Filter dates
+    private var startDate: String? = null
+    private var endDate: String? = null
 
     fun fetchHistoryForNIM(nim: String) {
         viewModelScope.launch {
             try {
-                val result = fetchHistoryData(nim)
-                _historyList.value = result
+                val result = fetchHistoryData(nim, startDate, endDate)
+                _historyList.value = result.transactions
+                _dailyTotals.value = result.dailyTotals
+                _monthlyTotals.value = result.monthlyTotals
+                _filterTotal.value = result.filterTotal
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching history: ${e.message}"
                 Log.e("HistoryViewModel", "Error fetching history", e)
@@ -92,10 +126,30 @@ class HistoryViewModel : ViewModel() {
             }
         }
     }
+    
+    fun setDateFilter(startDate: String?, endDate: String?) {
+        this.startDate = startDate
+        this.endDate = endDate
+    }
+    
+    fun clearDateFilter() {
+        startDate = null
+        endDate = null
+    }
 
-    private suspend fun fetchHistoryData(nim: String): List<HistoryTransaction> =
+    private suspend fun fetchHistoryData(nim: String, startDate: String?, endDate: String?): HistoryDataResult =
         withContext(Dispatchers.IO) {
-            val url = URL("$baseUrl/get_history.php?nim=$nim")
+            val urlBuilder = StringBuilder("$baseUrl/get_history.php?nim=$nim")
+            
+            if (!startDate.isNullOrEmpty()) {
+                urlBuilder.append("&start_date=$startDate")
+            }
+            
+            if (!endDate.isNullOrEmpty()) {
+                urlBuilder.append("&end_date=$endDate")
+            }
+            
+            val url = URL(urlBuilder.toString())
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
@@ -108,7 +162,7 @@ class HistoryViewModel : ViewModel() {
                     val response = reader.readText()
                     reader.close()
 
-                    parseHistoryResponse(response)
+                    parseHistoryResponseWithTotals(response)
                 } else {
                     throw Exception("Server error: $responseCode")
                 }
@@ -188,17 +242,27 @@ class HistoryViewModel : ViewModel() {
                 connection.disconnect()
             }
         }
+    
+    private data class HistoryDataResult(
+        val transactions: List<HistoryTransaction>,
+        val dailyTotals: List<DailyTotal>,
+        val monthlyTotals: List<MonthlyTotal>,
+        val filterTotal: Double
+    )
 
-    private fun parseHistoryResponse(jsonResponse: String): List<HistoryTransaction> {
+    private fun parseHistoryResponseWithTotals(jsonResponse: String): HistoryDataResult {
         val transactions = mutableListOf<HistoryTransaction>()
+        val dailyTotals = mutableListOf<DailyTotal>()
+        val monthlyTotals = mutableListOf<MonthlyTotal>()
+        var filterTotal = 0.0
 
         try {
             val jsonObject = JSONObject(jsonResponse)
             val success = jsonObject.getBoolean("success")
 
             if (success) {
+                // Parse transactions
                 val dataArray = jsonObject.getJSONArray("data")
-
                 for (i in 0 until dataArray.length()) {
                     val item = dataArray.getJSONObject(i)
                     transactions.add(
@@ -214,6 +278,71 @@ class HistoryViewModel : ViewModel() {
                         )
                     )
                 }
+                
+                // Parse daily totals
+                if (jsonObject.has("daily_totals")) {
+                    val dailyArray = jsonObject.getJSONArray("daily_totals")
+                    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    val displayFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
+                    
+                    for (i in 0 until dailyArray.length()) {
+                        val item = dailyArray.getJSONObject(i)
+                        val date = item.getString("date")
+                        val total = item.getDouble("total")
+                        
+                        // Format the date for display
+                        val parsedDate = dateFormat.parse(date)
+                        val formattedDate = if (parsedDate != null) {
+                            displayFormat.format(parsedDate)
+                        } else {
+                            date
+                        }
+                        
+                        dailyTotals.add(
+                            DailyTotal(
+                                date = date,
+                                total = total,
+                                formattedDate = formattedDate
+                            )
+                        )
+                    }
+                }
+                
+                // Parse monthly totals
+                if (jsonObject.has("monthly_totals")) {
+                    val monthlyArray = jsonObject.getJSONArray("monthly_totals")
+                    val monthFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
+                    
+                    for (i in 0 until monthlyArray.length()) {
+                        val item = monthlyArray.getJSONObject(i)
+                        val yearMonth = item.getString("month_year")
+                        val total = item.getDouble("total")
+                        
+                        // Create a date from year and month
+                        val year = item.getInt("year")
+                        val month = item.getInt("month") - 1 // Calendar months are 0-based
+                        
+                        val calendar = Calendar.getInstance()
+                        calendar.set(Calendar.YEAR, year)
+                        calendar.set(Calendar.MONTH, month)
+                        calendar.set(Calendar.DAY_OF_MONTH, 1)
+                        
+                        val formattedMonth = monthFormat.format(calendar.time)
+                        
+                        monthlyTotals.add(
+                            MonthlyTotal(
+                                yearMonth = yearMonth,
+                                total = total,
+                                formattedMonth = formattedMonth
+                            )
+                        )
+                    }
+                }
+                
+                // Get filter total
+                if (jsonObject.has("filter_total")) {
+                    filterTotal = jsonObject.getDouble("filter_total")
+                }
             } else {
                 val message = jsonObject.getString("message")
                 throw Exception(message)
@@ -223,6 +352,11 @@ class HistoryViewModel : ViewModel() {
             throw e
         }
 
-        return transactions
+        return HistoryDataResult(
+            transactions = transactions,
+            dailyTotals = dailyTotals,
+            monthlyTotals = monthlyTotals,
+            filterTotal = filterTotal
+        )
     }
 }
