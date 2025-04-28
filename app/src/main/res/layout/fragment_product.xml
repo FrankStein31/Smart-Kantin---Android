@@ -21,6 +21,35 @@
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <HorizontalScrollView
+        android:id="@+id/scroll_categories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/text_product_title">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_categories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:singleSelection="true">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Semua"
+                app:chipBackgroundColor="@color/chip_background_color"
+                android:textColor="@color/chip_text_color"
+                android:checkable="true"
+                android:checked="true" />
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_products"
         android:layout_width="match_parent"
@@ -30,7 +59,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         tools:listitem="@layout/item_product"
-        app:layout_constraintTop_toBottomOf="@id/text_product_title"
+        app:layout_constraintTop_toBottomOf="@id/scroll_categories"
         app:layout_constraintBottom_toTopOf="@id/btn_save_restrictions"/>
 
     <Button
