@@ -16,6 +16,7 @@ import com.android.simkanti.databinding.FragmentHistoryBinding
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.navigation.fragment.findNavController
 
 class HistoryFragment : Fragment() {
     private var _binding: FragmentHistoryBinding? = null
@@ -45,7 +46,11 @@ class HistoryFragment : Fragment() {
         historyViewModel = ViewModelProvider(this).get(HistoryViewModel::class.java)
 
         // Setup RecyclerView untuk riwayat transaksi
-        historyAdapter = HistoryAdapter(emptyList())
+        historyAdapter = HistoryAdapter(emptyList()) { transaction ->
+            // Navigasi ke detail transaksi
+            val action = HistoryFragmentDirections.actionNavigationHistoryToNavigationTransactionDetail(transaction)
+            findNavController().navigate(action)
+        }
         binding.recyclerViewHistory.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = historyAdapter

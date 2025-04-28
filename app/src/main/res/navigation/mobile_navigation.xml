@@ -21,7 +21,21 @@
         android:id="@+id/navigation_history"
         android:name="com.android.simkanti.ui.history.HistoryFragment"
         android:label="@string/title_history"
-        tools:layout="@layout/fragment_history" />
+        tools:layout="@layout/fragment_history">
+        <action
+            android:id="@+id/action_navigation_history_to_navigation_transaction_detail"
+            app:destination="@id/navigation_transaction_detail" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_transaction_detail"
+        android:name="com.android.simkanti.ui.history.TransactionDetailFragment"
+        android:label="Detail Transaksi"
+        tools:layout="@layout/fragment_transaction_detail">
+        <argument
+            android:name="transaction"
+            app:argType="com.android.simkanti.ui.history.HistoryTransaction" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_profile"

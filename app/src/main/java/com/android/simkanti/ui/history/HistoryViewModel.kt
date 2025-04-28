@@ -20,16 +20,16 @@ import java.util.Date
 import java.util.Locale
 
 // Data class to represent a single history transaction
-data class HistoryTransaction(
-    val id: Int,
-    val nim: String,
-    val totalHarga: String,
-    val idBarang: String,
-    val namaBarang: String,
-    val kategori: String,
-    val date: String,
-    val time: String? = null
-)
+//data class HistoryTransaction(
+//    val id: Int,
+//    val nim: String,
+//    val totalHarga: String,
+//    val idBarang: String,
+//    val namaBarang: String,
+//    val kategori: String,
+//    val date: String,
+//    val time: String? = null
+//)
 
 // Data class untuk batasan harian
 data class DailyLimit(
