@@ -176,11 +176,13 @@ class ProductFragment : Fragment() {
         
         productViewModel.getAllowedProducts(nim).observe(viewLifecycleOwner) { result ->
             binding.progressBar.visibility = View.GONE
-            if (result.success && result.hasRestriction) {
+            if (result.success) {
+                // Tandai semua produk yang tidak ada di daftar sebagai dibatasi
                 allowedProducts.clear()
-                result.data.forEach { product ->
-                    allowedProducts.add(product.idBarang)
-                }
+                val restrictedProducts = allProducts
+                    .filter { product -> !result.data.any { it.idBarang == product.idBarang } }
+                    .map { it.idBarang }
+                allowedProducts.addAll(restrictedProducts)
                 productAdapter.setCheckedItems(allowedProducts)
             }
         }
@@ -193,6 +195,7 @@ class ProductFragment : Fragment() {
         }
         
         binding.progressBar.visibility = View.VISIBLE
+        // Kirim daftar produk yang dibatasi
         productViewModel.setAllowedProducts(nim, allowedProducts).observe(viewLifecycleOwner) { result ->
             binding.progressBar.visibility = View.GONE
             Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
